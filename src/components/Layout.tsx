@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, MessageSquare, Map, User, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Footer from "./Footer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -84,6 +85,9 @@ export default function Layout({ children }: LayoutProps) {
       <main className="pt-16 min-h-screen">
         {children}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
