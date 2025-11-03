@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
 export interface TripPlanningData {
+  fromLocation: string;
   budget: number;
   budgetBreakdown: {
     accommodation: number;
@@ -14,9 +15,11 @@ export interface TripPlanningData {
   adults?: number;
   children?: number;
   healthConditions: string[];
+  customHealthCondition: string;
   foodPreferences: string[];
   travelMode: string[];
   interests: string[];
+  customInterests: string[];
 }
 
 interface TripPlanningContextType {
@@ -26,6 +29,7 @@ interface TripPlanningContextType {
 }
 
 const defaultTripData: TripPlanningData = {
+  fromLocation: '',
   budget: 50000,
   budgetBreakdown: {
     accommodation: 40,
@@ -36,9 +40,11 @@ const defaultTripData: TripPlanningData = {
   tripType: '',
   travelingWithPets: false,
   healthConditions: [],
+  customHealthCondition: '',
   foodPreferences: [],
   travelMode: [],
   interests: [],
+  customInterests: [],
 };
 
 const TripPlanningContext = createContext<TripPlanningContextType | undefined>(undefined);

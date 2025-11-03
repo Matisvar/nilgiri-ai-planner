@@ -7,14 +7,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useTripPlanning } from '@/contexts/TripPlanningContext';
-import { Users, Heart, Utensils, Car, Sparkles, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Users, Heart, Utensils, Car, Sparkles, ArrowLeft, ArrowRight, MapPin, Plus } from 'lucide-react';
 
 const Questionnaire = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const { tripData, updateTripData } = useTripPlanning();
   const navigate = useNavigate();
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [customInterest, setCustomInterest] = useState('');
 
-  const totalSteps = 6;
+  const totalSteps = 7;
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -69,6 +72,49 @@ const Questionnaire = () => {
     'Yoga Retreats', 'Adventure & Sports', 'Night Markets', 'Local Cuisine'
   ];
 
+  const indianLocations = [
+    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad',
+    'Jaipur', 'Goa', 'Kochi', 'Udaipur', 'Agra', 'Varanasi', 'Rishikesh', 'Manali',
+    'Shimla', 'Darjeeling', 'Ooty', 'Coorg', 'Munnar', 'Mysore', 'Amritsar', 'Chandigarh'
+  ];
+
+  const handleLocationChange = (value: string) => {
+    updateTripData({ fromLocation: value });
+    if (value.length > 0) {
+      const filtered = indianLocations.filter(loc => 
+        loc.toLowerCase().includes(value.toLowerCase())
+      );
+      setLocationSuggestions(filtered);
+      setShowLocationSuggestions(true);
+    } else {
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
+    }
+  };
+
+  const selectLocation = (location: string) => {
+    updateTripData({ fromLocation: location });
+    setShowLocationSuggestions(false);
+  };
+
+  const handleBudgetBreakdownChange = (category: keyof typeof tripData.budgetBreakdown, value: number) => {
+    const newBreakdown = { ...tripData.budgetBreakdown, [category]: value };
+    const total = Object.values(newBreakdown).reduce((sum, val) => sum + val, 0);
+    
+    if (total <= 100) {
+      updateTripData({ budgetBreakdown: newBreakdown });
+    }
+  };
+
+  const addCustomInterest = () => {
+    if (customInterest.trim() && !tripData.customInterests.includes(customInterest.trim())) {
+      updateTripData({
+        customInterests: [...tripData.customInterests, customInterest.trim()]
+      });
+      setCustomInterest('');
+    }
+  };
+
   const toggleArrayItem = (array: string[], item: string) => {
     if (array.includes(item)) {
       return array.filter(i => i !== item);
@@ -95,8 +141,48 @@ const Questionnaire = () => {
 
         {/* Step Content */}
         <div className="bg-card/80 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-nature-pine/10 animate-fade-in">
-          {/* Step 1: Budget */}
+          {/* Step 1: From Location */}
           {currentStep === 1 && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <MapPin className="w-12 h-12 mx-auto mb-4 text-nature-pine" />
+                <h2 className="text-3xl font-bold text-nature-pine mb-2">Where are you traveling from?</h2>
+                <p className="text-muted-foreground">Enter your starting location</p>
+              </div>
+
+              <div className="relative">
+                <Label className="text-lg mb-3 block">Starting Location</Label>
+                <Input
+                  type="text"
+                  value={tripData.fromLocation}
+                  onChange={(e) => handleLocationChange(e.target.value)}
+                  onFocus={() => tripData.fromLocation && setShowLocationSuggestions(true)}
+                  placeholder="Start typing your city..."
+                  className="text-lg"
+                />
+                
+                {showLocationSuggestions && locationSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-2 bg-card border border-nature-pine/20 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                    {locationSuggestions.map((location) => (
+                      <div
+                        key={location}
+                        onClick={() => selectLocation(location)}
+                        className="p-3 hover:bg-nature-mist/30 cursor-pointer transition-colors border-b border-nature-pine/10 last:border-b-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-nature-pine" />
+                          <span>{location}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Budget */}
+          {currentStep === 2 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-nature-pine mb-2">What's your budget?</h2>
@@ -135,26 +221,45 @@ const Questionnaire = () => {
               {/* Budget Breakdown */}
               <div className="mt-8 p-6 bg-nature-mist/30 rounded-2xl border border-nature-pine/10">
                 <h3 className="text-lg font-semibold mb-4 text-nature-pine">Estimated Budget Allocation</h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {Object.entries(calculateBreakdown(tripData.budget)).map(([category, amount]) => (
-                    <div key={category} className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
+                    <div key={category} className="flex justify-between items-center gap-4">
+                      <div className="flex items-center gap-2 flex-1">
                         <div className="w-3 h-3 rounded-full bg-nature-pine"></div>
-                        <span className="capitalize">{category}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ({tripData.budgetBreakdown[category as keyof typeof tripData.budgetBreakdown]}%)
-                        </span>
+                        <span className="capitalize min-w-[120px]">{category}</span>
                       </div>
-                      <span className="font-semibold">{formatCurrency(amount)}</span>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={tripData.budgetBreakdown[category as keyof typeof tripData.budgetBreakdown]}
+                          onChange={(e) => handleBudgetBreakdownChange(
+                            category as keyof typeof tripData.budgetBreakdown,
+                            parseInt(e.target.value) || 0
+                          )}
+                          className="w-20 text-right"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                        <span className="font-semibold min-w-[100px] text-right">{formatCurrency(amount)}</span>
+                      </div>
                     </div>
                   ))}
+                  <div className="pt-3 border-t border-nature-pine/20">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Total</span>
+                      <span className="font-semibold text-nature-pine">
+                        {Object.values(tripData.budgetBreakdown).reduce((sum, val) => sum + val, 0)}%
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 2: Type of Trip */}
-          {currentStep === 2 && (
+          {/* Step 3: Type of Trip */}
+          {currentStep === 3 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <Users className="w-12 h-12 mx-auto mb-4 text-nature-pine" />
@@ -250,8 +355,8 @@ const Questionnaire = () => {
             </div>
           )}
 
-          {/* Step 3: Health & Safety */}
-          {currentStep === 3 && (
+          {/* Step 4: Health & Safety */}
+          {currentStep === 4 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <Heart className="w-12 h-12 mx-auto mb-4 text-nature-pine" />
@@ -276,11 +381,22 @@ const Questionnaire = () => {
                   </div>
                 ))}
               </div>
+
+              <div className="mt-6 p-6 bg-nature-mist/30 rounded-2xl">
+                <Label className="text-lg mb-3 block">Other health condition (if not listed above)</Label>
+                <Input
+                  type="text"
+                  value={tripData.customHealthCondition}
+                  onChange={(e) => updateTripData({ customHealthCondition: e.target.value })}
+                  placeholder="Type your health condition..."
+                  className="text-lg"
+                />
+              </div>
             </div>
           )}
 
-          {/* Step 4: Food Preferences */}
-          {currentStep === 4 && (
+          {/* Step 5: Food Preferences */}
+          {currentStep === 5 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <Utensils className="w-12 h-12 mx-auto mb-4 text-nature-pine" />
@@ -307,8 +423,8 @@ const Questionnaire = () => {
             </div>
           )}
 
-          {/* Step 5: Travel Mode */}
-          {currentStep === 5 && (
+          {/* Step 6: Travel Mode */}
+          {currentStep === 6 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <Car className="w-12 h-12 mx-auto mb-4 text-nature-pine" />
@@ -339,8 +455,8 @@ const Questionnaire = () => {
             </div>
           )}
 
-          {/* Step 6: Interests */}
-          {currentStep === 6 && (
+          {/* Step 7: Interests */}
+          {currentStep === 7 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <Sparkles className="w-12 h-12 mx-auto mb-4 text-nature-pine" />
@@ -359,13 +475,49 @@ const Questionnaire = () => {
                     }}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center ${
                       tripData.interests.includes(interest)
-                        ? 'border-nature-pine bg-nature-pine/10'
+                        ? 'border-nature-pine bg-nature-pine/10 font-semibold'
                         : 'border-nature-pine/20 hover:border-nature-pine/50 hover:bg-nature-mist/20'
                     }`}
                   >
                     <div className="text-sm font-medium">{interest}</div>
                   </div>
                 ))}
+                
+                {tripData.customInterests.map((interest) => (
+                  <div
+                    key={interest}
+                    onClick={() => {
+                      updateTripData({
+                        customInterests: tripData.customInterests.filter(i => i !== interest)
+                      });
+                    }}
+                    className="p-4 rounded-xl border-2 border-nature-moss bg-nature-moss/10 cursor-pointer transition-all text-center font-semibold"
+                  >
+                    <div className="text-sm font-medium">{interest}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 p-6 bg-nature-mist/30 rounded-2xl">
+                <Label className="text-lg mb-3 block">Add your own interest</Label>
+                <div className="flex gap-3">
+                  <Input
+                    type="text"
+                    value={customInterest}
+                    onChange={(e) => setCustomInterest(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addCustomInterest()}
+                    placeholder="Type and press Add..."
+                    className="text-lg flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={addCustomInterest}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </Button>
+                </div>
               </div>
             </div>
           )}
