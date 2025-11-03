@@ -107,9 +107,10 @@ const Questionnaire = () => {
   };
 
   const addCustomInterest = () => {
-    if (customInterest.trim() && !tripData.customInterests.includes(customInterest.trim())) {
+    const currentCustomInterests = tripData.customInterests || [];
+    if (customInterest.trim() && !currentCustomInterests.includes(customInterest.trim())) {
       updateTripData({
-        customInterests: [...tripData.customInterests, customInterest.trim()]
+        customInterests: [...currentCustomInterests, customInterest.trim()]
       });
       setCustomInterest('');
     }
@@ -483,12 +484,12 @@ const Questionnaire = () => {
                   </div>
                 ))}
                 
-                {tripData.customInterests.map((interest) => (
+                {(tripData.customInterests || []).map((interest) => (
                   <div
                     key={interest}
                     onClick={() => {
                       updateTripData({
-                        customInterests: tripData.customInterests.filter(i => i !== interest)
+                        customInterests: (tripData.customInterests || []).filter(i => i !== interest)
                       });
                     }}
                     className="p-4 rounded-xl border-2 border-nature-moss bg-nature-moss/10 cursor-pointer transition-all text-center font-semibold"
