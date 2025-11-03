@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Mountain, Leaf, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-bg.jpg";
@@ -16,6 +16,8 @@ const Map = ({ className }: { className?: string }) => (
 );
 
 export default function Home() {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -61,14 +63,12 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button
-                asChild
+                onClick={() => navigate('/questionnaire')}
                 size="lg"
                 className="bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 text-lg px-8 py-6 group"
               >
-                <Link to="/chat">
-                  Start Planning
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                Start Planning
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
                 asChild
@@ -256,14 +256,12 @@ export default function Home() {
               Start planning your dream mountain escape with Tripzy AI today
             </p>
             <Button
-              asChild
+              onClick={() => navigate('/questionnaire')}
               size="lg"
               className="bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 text-lg px-10 py-6 group"
             >
-              <Link to="/chat">
-                Get Started Free
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              Get Started Free
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         </div>

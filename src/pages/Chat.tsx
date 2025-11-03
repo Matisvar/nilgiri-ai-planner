@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, Sparkles, ChevronRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useTripPlanning } from "@/contexts/TripPlanningContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -21,17 +23,42 @@ interface ItineraryItem {
 }
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hi! I'm Tripzy AI, your Nilgiris travel assistant. Let's plan your perfect mountain escape! Where are you traveling from?",
-      timestamp: new Date()
-    }
-  ]);
+  const { tripData } = useTripPlanning();
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [itineraryOpen, setItineraryOpen] = useState(true);
+
+  useEffect(() => {
+    // Generate personalized welcome message based on questionnaire data
+    const welcomeMessage = generateWelcomeMessage();
+    setMessages([{
+      id: "1",
+      role: "assistant",
+      content: welcomeMessage,
+      timestamp: new Date()
+    }]);
+
+    if (tripData.budget > 10000 && tripData.tripType) {
+      toast({
+        title: "Trip preferences loaded!",
+        description: "I've reviewed your preferences and I'm ready to help plan your perfect Nilgiris trip.",
+      });
+    }
+  }, []);
+
+  const generateWelcomeMessage = () => {
+    if (!tripData.tripType || tripData.budget === 50000) {
+      return "Hi! I'm Tripzy AI, your Nilgiris travel assistant. Let's plan your perfect mountain escape! Where are you traveling from?";
+    }
+
+    const tripTypeText = tripData.tripType === 'solo' ? 'solo adventure' : 
+                        tripData.tripType === 'partner' ? 'romantic getaway' :
+                        tripData.tripType === 'friends' ? 'friends trip' : 'family vacation';
+
+    return `Hi! I'm Tripzy AI, and I'm excited to help plan your ${tripTypeText} in the Nilgiris! 🏔️\n\nBased on your preferences:\n• Budget: ₹${tripData.budget.toLocaleString('en-IN')}\n• Interests: ${tripData.interests.slice(0, 3).join(', ')}${tripData.interests.length > 3 ? ' and more' : ''}\n• Food: ${tripData.foodPreferences.join(', ') || 'Not specified'}\n\nI'm ready to create a personalized itinerary just for you. Where would you like to start - hotels, activities, or restaurants?`;
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
